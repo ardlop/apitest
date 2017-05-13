@@ -1,5 +1,5 @@
 [DB]
-user: root
-password: root
-db: serverTest
-host: 127.0.0.1
+user: ardlop
+password: Elcoco.com
+db: ardlop$apiDB
+host: ardlop.mysql.pythonanywhere-services.com 
