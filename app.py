@@ -1,10 +1,12 @@
 from flask import Flask
 from models import db, User
 import ConfigParser
+from flask_sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 
-onfig = ConfigParser.ConfigParser()
+config = ConfigParser.ConfigParser()
 config.read('config.py')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://' + config.get('DB', 'user') + \
