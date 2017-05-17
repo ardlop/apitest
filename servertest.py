@@ -290,6 +290,7 @@ def authorize(*args, **kwargs):
     if not user:
         return redirect('/')
     if request.method == 'GET':
+        print kwargs
         client_key = kwargs.get('resource_owner_key')
         client = Client.query.filter_by(client_key=client_key).first()
         kwargs['client'] = client

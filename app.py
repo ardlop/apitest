@@ -155,14 +155,18 @@ def access_token():
 def authorize(*args, **kwargs):
 	print 'authorize_handler'
 	user = current_user()
-	if not user:
-					return redirect('/')
+	print args
+	print kwargs
+	#if not user:
+	#	print 'not user'
+	#	return redirect('/')
 	if request.method == 'GET':
-					client_key = kwargs.get('resource_owner_key')
-					client = Client.query.filter_by(client_key=client_key).first()
-					kwargs['client'] = client
-					kwargs['user'] = user
-					return render_template('authorize.html', **kwargs)
+		print kwargs
+		client_key = kwargs.get('resource_owner_key')
+		client = Client.query.filter_by(client_key=client_key).first()
+		kwargs['client'] = client
+		kwargs['user'] = user
+		return render_template('authorize.html', **kwargs)
 	confirm = request.form.get('confirm', 'no')
 	return confirm == 'yes'
 
@@ -172,22 +176,22 @@ def authorize(*args, **kwargs):
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'home'
+login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(id):
-				return User.query.get(int(id))
+	return User.query.get(int(id))
 
 @app.before_request
 def before_request():
-				g.user = current_user
+	g.user = current_user
 
 ### My views
 
 @app.route('/hello')
 @login_required
 def hello_world():
-				return connectMYSQL
+	return connectMYSQL
 
 @app.route('/hi')
 @oauth.require_oauth()
@@ -196,7 +200,7 @@ def holaOauth():
 
 
 @app.route('/', methods=('GET', 'POST'))
-def home():
+def login():
 	if request.method == 'GET':
 		return render_template('login.html')
 	if request.method == 'POST':
@@ -208,7 +212,7 @@ def home():
 		
 		if user is None or user.password != password:
 			flash('Username or Password is invalid' , 'error')
-			return redirect(url_for('home'))
+			return redirect(url_for('login'))
 		
 		#if not user:
 		#	user = User(username=username, password = password, email='test@test.com')
@@ -218,40 +222,13 @@ def home():
 		login_user(user)
 		flash('Logged in successfully')
 	return redirect(request.args.get('next') or url_for('client'))
-'''
-@app.route('/login', methods=['GET','POST'])
-def login():
-	if request.method == 'GET':
-		return render_template('login.html')
-	username = request.form['username']
-	password = request.form['password']
-	registered_user = User.query.filter_by(username=username).first()
-				
-	if registered_user is None or registered_user.password != password:
-		flash('Username or Password is invalid' , 'error')
-		return redirect(url_for('login'))
 
-	#salt = registered_user.timestamp
-	#print salt
-	#dk = hashlib.pbkdf2_hmac('sha256', password, str(salt), 100000)
-	#pswd = binascii.hexlify(dk)
-	#print registered_user
-	#print registered_user.password == password
-	#print registered_user.password
-	#print pswd
-
-	login_user(registered_user)
-	flash('Logged in successfully')
-	session['id'] = registered_user.id
-	return redirect(request.args.get('next') or url_for('client'))
-	#return redirect(request.args.get('next') or url_for('index'))
-'''
 @app.route('/client')
 def client():
 	try:
 		user = current_user()
 		if not user:
-			return redirect(url_for('home'))
+			return redirect(url_for('login'))
 
 		client = Client.query.filter_by(user_id = user.id).first()
 		if client is None:
@@ -270,53 +247,11 @@ def client():
 				client_secret=client.client_secret)
 	except Exception as e:
 		flash(e.message)
-		return redirect(url_for('home'))
+		return redirect(url_for('login'))
 
-'''
-@app.route('/client')
-def client():
-				user = current_user()
-				if not user:
-								return redirect('/')
-				item = Client(
-								client_key=gen_salt(40),
-								client_secret=gen_salt(50),
-								_redirect_uris='http://localhost:8000/authorized',
-								user_id=user.id,
-				)
-				db.session.add(item)
-				db.session.commit()
-				return jsonify(
-								client_key=item.client_key,
-								client_secret=item.client_secret
-				)
 
-'''
 if __name__ == '__main__':
 	db.init_app(app)
 	with app.app_context():
 		db.create_all()	
-		
-		#salt = time.time()
-		#print str(salt)
-		#dk = hashlib.pbkdf2_hmac('sha256', r'test', r'SAEAPP', 100000)
-		#pswd = binascii.hexlify(dk)		
-		#pswd = hashlib.sha512("test").hexdigest()
-		#print pswd
-
-		'''
-		user = User(
-		username = 'test',
-		email='test@test.com',
-		password = 'test'
-		)
-
-		db.session.add(user)
-		db.session.commit()
-		'''
-		#>>> dk = hashlib.pbkdf2_hmac('sha256', b'test', b'SAEAPP', 100000)
 	app.run()
-				#db.create_all()
-				#if 'liveconsole' not in gethostname():
-				#    app.run()
-
